@@ -6,4 +6,10 @@ const readFile = async () => {
     return JSON.parse(data);
 };
 
-module.exports = { readFile };
+const writeFile = async () => {
+    const read = await readFile();
+
+    return fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(read));
+};
+
+module.exports = { readFile, writeFile };
