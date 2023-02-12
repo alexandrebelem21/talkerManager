@@ -1,8 +1,16 @@
+const fs = require('fs/promises');
+const path = require('path');
+
 const express = require('express');
 const crypto = require('crypto');
-const validator = require('validator');
 
 const { readFile, writeFile } = require('./talker');
+const fieldValidation = require('./middlewares/fieldValidation');
+const ageValidation = require('./middlewares/ageValidation');
+const nameValidation = require('./middlewares/nameValidation');
+const talkValidation = require('./middlewares/talkValidation');
+const { rateValidation, rateNumValidation } = require('./middlewares/rateValidation');
+const tokenValidation = require('./middlewares/tokenValidation');
 
 const app = express();
 app.use(express.json());
@@ -43,21 +51,34 @@ function generateToken() {
     .slice(0, 16);
 }
 
-app.post('/login', async (req, res) => {
+app.post('/login', fieldValidation, async (req, res) => {
   const { email, password } = req.body;
   const token = generateToken();
-  if (!email) {
- return res.status(400).json({ message: 'O campo "email" é obrigatório' }); 
-}
-  if (!validator.isEmail(email)) {
-    return res.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
-  }
-  if (!password) {
-    return res.status(400).json({ message: 'O campo "password" é obrigatório' });
-  }
-  if (password.length < 6) {
-    return res.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
-  }
+
   await writeFile(email, password);
   return res.status(200).json({ token });
+});
+
+app.post('/talker',
+tokenValidation,
+nameValidation,
+ageValidation, 
+talkValidation,
+rateValidation,
+rateNumValidation,
+async (req, res) => {
+  const { name, age, talk: { watchedAt, rate } } = req.body;
+  const dados = await readFile();
+  const newTalker = {
+    id: dados.length + 1,
+    name,
+    age,
+    talk: {
+      watchedAt,
+      rate,
+    },
+  };
+  dados.push(newTalker);
+  await fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(dados), 'utf-8');
+  return res.status(201).json(newTalker);
 });
