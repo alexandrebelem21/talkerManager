@@ -18,6 +18,18 @@ app.use(express.json());
 const HTTP_OK_STATUS = 200;
 const PORT = '3000';
 
+app.get('/talker/search',
+tokenValidation,
+async (req, res) => {
+  const { q } = req.query;
+  const dados = await readFile();
+  if (!q) {
+    return res.status(200).json(dados);
+  }
+  const searchDados = await dados.filter((tlk) => tlk.name.includes(q));
+  return res.status(200).json(searchDados);
+});
+
 // não remova esse endpoint, e para o avaliador funcionar.
 app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
