@@ -82,3 +82,31 @@ async (req, res) => {
   await fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(dados), 'utf-8');
   return res.status(201).json(newTalker);
 });
+
+app.put('/talker/:id',
+tokenValidation,
+nameValidation,
+ageValidation, 
+talkValidation,
+rateValidation,
+rateNumValidation,
+async (req, res) => {
+  const { id } = req.params;
+  const { name, age, talk: { watchedAt, rate } } = req.body;
+  const dados = await readFile();
+  const dadosId = dados.findIndex((tlk) => tlk.id === Number(id));
+  // findIndex usado para pegar diretamente o index. Usando so o find
+  // precisaria fazer algo como const index = dados.indexOf(dadosId);
+  const updateTalker = {
+    id: Number(id),
+    name,
+    age,
+    talk: {
+      watchedAt,
+      rate,
+    },
+  };
+  dados[dadosId] = updateTalker;
+  await fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify([...dados]), 'utf-8');
+  return res.status(200).json(updateTalker);
+});
